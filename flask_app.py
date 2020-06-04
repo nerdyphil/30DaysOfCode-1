@@ -20,7 +20,7 @@ def index():
 
 @app.route("/generate/")
 def generate():
-    certificate = make_certificate(**request.args)
+    certificate = make_certificate("30DaysOfCode.png", **request.args)
     return redirect(certificate)
 
 
@@ -28,9 +28,8 @@ def delete_file(img_title):
     os.unlink(os.path.join(GENERATED_PATH, img_title))
 
 
-def make_certificate(first_name, last_name, track, level):
+def make_certificate(filename, first_name, last_name, track, level):
     # set certificate style
-    filename = "30DaysOfCode.png"
     font = "Cinzel-Bold.otf"
     track_font = "Montserrat-Regular.ttf"
     level_font = "Montserrat-Regular.ttf"
@@ -63,7 +62,7 @@ def make_certificate(first_name, last_name, track, level):
     draw.text((x, y), "{} {}".format(track, level), fill=track_color, font=PIL_font)
 
     # save certificate
-    img_title = "{}-{}-{}-{}.png".format(first_name, last_name, track, level)
+    img_title = "mentor-{}-{}-{}-{}.png".format(first_name, last_name, track, level)
     img.save(os.path.join(GENERATED_PATH, img_title))
     task = Timer(30, delete_file, (img_title,))
     task.start()
@@ -71,6 +70,52 @@ def make_certificate(first_name, last_name, track, level):
 
     return base_64
 
+@app.route("/mentor/")
+def mentor():
+    certificate = make_certificate_mentor("Do.jpg", **request.args)
+    return redirect(certificate)
+
+def make_certificate_mentor(filename, first_name, last_name, track, level):
+    # set certificate style
+    font = "Cinzel-Bold.otf"
+    track_font = "Montserrat-Regular.ttf"
+    level_font = "Montserrat-Regular.ttf"
+
+    # name style
+    color = "#fff"
+    size = 70
+    y = 640
+
+    # track style
+    track_color = "#fff"
+    track_size = 30
+
+    # name text
+    text = "{} {}".format(first_name, last_name).upper()
+    raw_img = Image.open(os.path.join(CERTIFICATE_PATH, filename))
+    img = raw_img.copy()
+    draw = ImageDraw.Draw(img)
+
+    # draw name
+    PIL_font = ImageFont.truetype(os.path.join(FONT_PATH, font), size)
+    w, h = draw.textsize(text, font=PIL_font)
+    W, H = img.size
+    x = (W - w) / 2
+    draw.text((x, y), text, fill=color, font=PIL_font)
+
+    # draw track and level
+    PIL_font = ImageFont.truetype(os.path.join(FONT_PATH, track_font), track_size)
+    x, y = 880, 765
+    draw.text((x, y), "{} {}".format(track, level), fill=track_color, font=PIL_font)
+
+    # save certificate
+    img_title = "mentor-{}-{}-{}-{}.png".format(first_name, last_name, track, level)
+    img.save(os.path.join(GENERATED_PATH, img_title))
+    task = Timer(30, delete_file, (img_title,))
+    task.start()
+    base_64 =  urljoin(request.host_url, url_for("static", filename="generated/" + img_title))
+
+    return base_64
 
 if __name__ == "__main__":
     app.run(debug=True)
